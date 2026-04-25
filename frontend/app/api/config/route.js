@@ -3,47 +3,49 @@ import path from "path";
 
 export async function POST(request) {
   try {
-    const { botToken, chatId } = await request.json();
+    const body = await request.json();
+    const botToken = body.botToken?.trim();
+    const chatId = body.chatId?.trim() || body.telegramId?.trim();
 
-    // Validate inputs
     if (!botToken || !chatId) {
       return new Response(
-        JSON.stringify({ error: "Bot token and chat ID are required" }),
+        JSON.stringify({ error: "Bot token and Telegram ID are required" }),
         { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
-    // Create .env file in parent directory
-    const envPath = path.join(process.cwd(), "..", "bls_monitor", ".env");
+    const envPath = path.join(process.cwd(), "..", "backend", ".env");
 
-    let envContent = `TELEGRAM_BOT_TOKEN=${botToken}\nTELEGRAM_CHAT_ID=${chatId}\nCHECK_INTERVAL=30\n`;
-
-    // Check if .env exists and preserve other variables
-    if (fs.existsSync(envPath)) {
-      const existingContent = fs.readFileSync(envPath, "utf8");
-      const lines = existingContent.split("\n");
-      const preservedLines = lines.filter(
-        (line) =>
-          !line.startsWith("TELEGRAM_BOT_TOKEN=") &&
-          !line.startsWith("TELEGRAM_CHAT_ID=") &&
-          line.trim() !== "",
-      );
-      envContent = `TELEGRAM_BOT_TOKEN=${botToken}\nTELEGRAM_CHAT_ID=${chatId}\n${preservedLines.join("\n")}`;
-    }
-
-    fs.writeFileSync(envPath, envContent);
-
-    // Test Telegram connection
     try {
-      const testResponse = await fetch(
+      const botResponse = await fetch(
         `https://api.telegram.org/bot${botToken}/getMe`,
-        { timeout: 5000 },
+        { signal: AbortSignal.timeout(5000) },
       );
 
-      if (!testResponse.ok) {
+      const botData = await botResponse.json();
+      if (!botResponse.ok || !botData.ok) {
         return new Response(
           JSON.stringify({
             error: "Invalid bot token. Could not verify with Telegram.",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      const testMessage = encodeURIComponent(
+        "BLS Monitor connected successfully. You will receive alerts here.",
+      );
+      const sendResponse = await fetch(
+        `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${encodeURIComponent(chatId)}&text=${testMessage}`,
+        { signal: AbortSignal.timeout(5000) },
+      );
+      const sendData = await sendResponse.json();
+
+      if (!sendResponse.ok || !sendData.ok) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "Telegram ID is invalid or the bot cannot message it yet. Send a message to your bot first, then try again.",
           }),
           { status: 400, headers: { "Content-Type": "application/json" } },
         );
@@ -52,16 +54,40 @@ export async function POST(request) {
       return new Response(
         JSON.stringify({
           error:
-            "Could not verify bot token with Telegram. Check your internet connection.",
+            "Could not verify Telegram credentials. Check your internet connection and try again.",
         }),
         { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
+    let envLines = [
+      `TELEGRAM_BOT_TOKEN=${botToken}`,
+      `TELEGRAM_CHAT_ID=${chatId}`,
+    ];
+
+    if (fs.existsSync(envPath)) {
+      const existingContent = fs.readFileSync(envPath, "utf8");
+      const preservedLines = existingContent
+        .split(/\r?\n/)
+        .filter(
+          (line) =>
+            line.trim() !== "" &&
+            !line.startsWith("TELEGRAM_BOT_TOKEN=") &&
+            !line.startsWith("TELEGRAM_CHAT_ID="),
+        );
+
+      envLines = [...envLines, ...preservedLines];
+    } else {
+      envLines.push("CHECK_INTERVAL=30");
+    }
+
+    fs.writeFileSync(envPath, `${envLines.join("\n")}\n`, "utf8");
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Configuration saved successfully",
+        message:
+          "Configuration saved successfully. A Telegram test message was sent.",
       }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );

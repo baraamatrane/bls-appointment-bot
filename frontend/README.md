@@ -41,13 +41,14 @@ npm run dev
    - Create your bot and copy the BOT_TOKEN
    - Send any message to your new bot
    - Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-   - Copy your chat ID from the response
+   - Copy your chat or user ID from the response
 
 2. **Configure in UI:**
    - Paste your Bot Token in the first field
-   - Paste your Chat ID in the second field
+   - Paste your Telegram ID in the second field
    - Click "Save Configuration"
-   - The credentials will be saved to the main monitor's `.env` file
+   - The credentials will be saved to `../backend/.env`
+   - A test Telegram message will confirm the bot can notify you
 
 ## Building for Production
 
@@ -73,19 +74,19 @@ npm start
 
 ## How It Works
 
-1. User enters Telegram Bot Token and Chat ID
+1. User enters Telegram Bot Token and Telegram ID
 2. Form is submitted to `/api/config` endpoint
-3. Backend validates the bot token with Telegram API
-4. Configuration is saved to `../bls_monitor/.env`
+3. Backend validates the bot token and sends a test Telegram message
+4. Configuration is saved to `../backend/.env`
 5. Python monitor script picks up the new credentials
 6. User receives Telegram notifications for appointment slots
 
 ## Environment Variables
 
-The application writes the following variables to the parent BLS monitor's `.env` file:
+The application writes the following variables to the backend monitor's `.env` file:
 
 - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
-- `TELEGRAM_CHAT_ID`: Your Telegram chat ID
+- `TELEGRAM_CHAT_ID`: Your Telegram chat or user ID
 - `CHECK_INTERVAL`: Default is 30 seconds
 
 ## Deployment
@@ -104,7 +105,7 @@ This app can be deployed to:
 - Ensure you have internet connectivity
 - Verify the bot is active
 
-**Chat ID not found:**
+**Telegram ID not found:**
 
 - Make sure you sent a message to your new bot
 - Visit the getUpdates URL and check the response format

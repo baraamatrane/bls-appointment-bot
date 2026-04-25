@@ -4,14 +4,14 @@ import { useState } from "react";
 
 export default function Home() {
   const [botToken, setBotToken] = useState("");
-  const [chatId, setChatId] = useState("");
+  const [telegramId, setTelegramId] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!botToken.trim() || !chatId.trim()) {
+    if (!botToken.trim() || !telegramId.trim()) {
       setStatus({
         type: "error",
         message: "Please fill in all fields",
@@ -30,7 +30,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           botToken: botToken.trim(),
-          chatId: chatId.trim(),
+          telegramId: telegramId.trim(),
         }),
       });
 
@@ -40,10 +40,10 @@ export default function Home() {
         setStatus({
           type: "success",
           message:
-            "✅ Configuration saved! Monitor will use these credentials.",
+            "Configuration saved. A test Telegram message was sent to confirm alerts will arrive.",
         });
         setBotToken("");
-        setChatId("");
+        setTelegramId("");
       } else {
         setStatus({
           type: "error",
@@ -64,12 +64,12 @@ export default function Home() {
     <main>
       <div className="container">
         <div className="header">
-          <h1>🇪🇸 BLS Monitor Setup</h1>
+          <h1>BLS Monitor Setup</h1>
           <p>Configure your Telegram notifications</p>
         </div>
 
         <div className="guide">
-          <h3>How to get your Telegram credentials:</h3>
+          <h3>How to get your Telegram token and ID:</h3>
           <ol>
             <li>
               Open Telegram and search for <strong>@BotFather</strong>
@@ -78,17 +78,15 @@ export default function Home() {
               Send <code>/newbot</code> and follow the steps
             </li>
             <li>
-              Copy your <strong>BOT_TOKEN</strong> from BotFather
+              Copy your <strong>bot token</strong> from BotFather
             </li>
             <li>Send any message to your new bot</li>
             <li>
-              Visit:{" "}
-              <code>
-                https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates
-              </code>
+              Visit{" "}
+              <code>https://api.telegram.org/bot&lt;YOUR_TOKEN&gt;/getUpdates</code>
             </li>
             <li>
-              Find the <strong>chat id</strong> in the response
+              Copy your <strong>chat or user ID</strong> from the response
             </li>
           </ol>
         </div>
@@ -108,22 +106,22 @@ export default function Home() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="chatId">Telegram Chat ID</label>
+            <label htmlFor="telegramId">Telegram ID</label>
             <input
-              id="chatId"
+              id="telegramId"
               type="text"
-              value={chatId}
-              onChange={(e) => setChatId(e.target.value)}
+              value={telegramId}
+              onChange={(e) => setTelegramId(e.target.value)}
               placeholder="123456789"
               disabled={loading}
             />
             <div className="input-hint">
-              Your unique Telegram ID from getUpdates
+              Your Telegram chat or user ID from getUpdates
             </div>
           </div>
 
           <button type="submit" disabled={loading}>
-            {loading ? "⏳ Saving..." : "💾 Save Configuration"}
+            {loading ? "Saving..." : "Save Configuration"}
           </button>
         </form>
 
