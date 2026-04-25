@@ -311,6 +311,11 @@ button.ghost:hover:not(:disabled) {
   border: 1px solid var(--line);
 }
 
+.top-status {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
 .status.show {
   display: block;
 }

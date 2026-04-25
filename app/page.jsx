@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const initialStatus = {
   running: false,
@@ -30,11 +30,11 @@ function formatResultLabel(value) {
 export default function Home() {
   const [botToken, setBotToken] = useState("");
   const [telegramId, setTelegramId] = useState("");
-  const [checkInterval, setCheckInterval] = useState(30);
   const [loading, setLoading] = useState(false);
   const [monitorAction, setMonitorAction] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [monitorStatus, setMonitorStatus] = useState(initialStatus);
+  const hasLoadedInitialConfig = useRef(false);
 
   useEffect(() => {
     const loadStatus = async () => {
@@ -42,8 +42,11 @@ export default function Home() {
         const response = await fetch("/api/monitor", { cache: "no-store" });
         const data = await response.json();
         setMonitorStatus(data);
-        setTelegramId(data.config.telegramId || "");
-        setCheckInterval(data.config.checkInterval || 30);
+
+        if (!hasLoadedInitialConfig.current) {
+          setTelegramId(data.config.telegramId || "");
+          hasLoadedInitialConfig.current = true;
+        }
       } catch (error) {
         setStatus({
           type: "error",
@@ -80,7 +83,7 @@ export default function Home() {
         body: JSON.stringify({
           botToken,
           telegramId,
-          checkInterval,
+          checkInterval: monitorStatus.config.checkInterval || 30,
         }),
       });
       const data = await response.json();
@@ -153,6 +156,18 @@ export default function Home() {
 
   return (
     <main>
+      {status.message && (
+        <div className={`status show top-status ${status.type}`}>
+          {status.message}
+        </div>
+      )}
+
+      {monitorStatus.lastError && (
+        <div className="status show top-status error">
+          {monitorStatus.lastError}
+        </div>
+      )}
+
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">BLS monitor dashboard</span>
@@ -217,18 +232,6 @@ export default function Home() {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="checkInterval">Check Interval (seconds)</label>
-            <input
-              id="checkInterval"
-              type="number"
-              min="5"
-              value={checkInterval}
-              onChange={(e) => setCheckInterval(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
           <button type="submit" disabled={loading}>
             {loading ? "Saving..." : "Save Configuration"}
           </button>
@@ -283,40 +286,8 @@ export default function Home() {
               </div>
             </div>
           </section>
-
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Recent Activity</h2>
-              <p>Latest server-side monitor events from the Next.js runtime.</p>
-            </div>
-
-            <div className="log-list">
-              {monitorStatus.logs.length === 0 ? (
-                <div className="log empty">No activity yet.</div>
-              ) : (
-                monitorStatus.logs.map((entry) => (
-                  <div
-                    className={`log ${entry.level}`}
-                    key={entry.timestamp + entry.message}
-                  >
-                    <span>{entry.timestamp}</span>
-                    <strong>{entry.level}</strong>
-                    <p>{entry.message}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
         </div>
       </section>
-
-      {status.message && (
-        <div className={`status show ${status.type}`}>{status.message}</div>
-      )}
-
-      {monitorStatus.lastError && (
-        <div className="status show error">{monitorStatus.lastError}</div>
-      )}
     </main>
   );
 }
