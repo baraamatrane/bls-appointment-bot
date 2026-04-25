@@ -49,16 +49,26 @@ npm run dev
 3. Run the stress test in another terminal:
 
 ```bash
-npm run stress:config
+npm run stress:test
+```
+
+By default this stresses `POST /api/config`, which is the safest write-heavy path to hammer locally. You can also target `GET /api/monitor`:
+
+```bash
+$env:STRESS_PROFILE="monitor-status"
+npm run stress:test
 ```
 
 Optional environment variables:
 
-- `STRESS_TARGET_URL`: defaults to `http://127.0.0.1:3000/api/config`
+- `STRESS_PROFILE`: `config` or `monitor-status`, defaults to `config`
+- `STRESS_TARGET_URL`: overrides the default URL for the selected profile
 - `STRESS_REQUESTS`: defaults to `100`
 - `STRESS_CONCURRENCY`: defaults to `20`
-- `STRESS_BOT_TOKEN`: defaults to `stress-test-token`
-- `STRESS_TELEGRAM_ID`: defaults to `123456789`
+- `STRESS_MAX_FAILURES`: defaults to `0`
+- `STRESS_BOT_TOKEN`: defaults to `stress-test-token` for the `config` profile
+- `STRESS_TELEGRAM_ID`: defaults to `123456789` for the `config` profile
+- `STRESS_CHECK_INTERVAL`: defaults to `30` for the `config` profile
 
 ## Deployment note
 

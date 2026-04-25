@@ -16,6 +16,17 @@ const initialStatus = {
   logs: [],
 };
 
+function formatResultLabel(value) {
+  if (!value) {
+    return "Idle";
+  }
+
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export default function Home() {
   const [botToken, setBotToken] = useState("");
   const [telegramId, setTelegramId] = useState("");
@@ -144,11 +155,11 @@ export default function Home() {
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">Full-stack Next.js monitor</span>
+          <span className="eyebrow">BLS monitor dashboard</span>
           <h1>BLS Appointment Monitor</h1>
           <p>
-            Your Telegram setup, polling loop, and alert delivery now live in
-            the same Next.js app.
+            A quiet control panel for Telegram alerts, monitor status, and
+            recent booking checks.
           </p>
         </div>
 
@@ -260,7 +271,7 @@ export default function Home() {
             <div className="stats">
               <div>
                 <span>Last result</span>
-                <strong>{monitorStatus.lastResult || "idle"}</strong>
+                <strong>{formatResultLabel(monitorStatus.lastResult)}</strong>
               </div>
               <div>
                 <span>Last check</span>
@@ -284,7 +295,10 @@ export default function Home() {
                 <div className="log empty">No activity yet.</div>
               ) : (
                 monitorStatus.logs.map((entry) => (
-                  <div className={`log ${entry.level}`} key={entry.timestamp + entry.message}>
+                  <div
+                    className={`log ${entry.level}`}
+                    key={entry.timestamp + entry.message}
+                  >
                     <span>{entry.timestamp}</span>
                     <strong>{entry.level}</strong>
                     <p>{entry.message}</p>

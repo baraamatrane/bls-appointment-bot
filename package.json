@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "stress:config": "node scripts/stress-config.mjs",
+    "stress:test": "node scripts/stress-config.mjs",
     "mock:telegram": "node scripts/mock-telegram.mjs"
   },
   "dependencies": {
