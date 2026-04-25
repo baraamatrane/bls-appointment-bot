@@ -1,63 +1,65 @@
-# BLS Appointment Monitor
+# BLS Monitor UI
 
-A combined project with a Python backend that monitors BLS Spain Casablanca appointment availability and a Next.js frontend for configuring Telegram notification credentials.
+This is now a full-stack Next.js application. The same app provides the UI, stores monitor configuration, runs the polling loop, and sends Telegram notifications.
 
-## Project structure
-
-- `backend/` - Python monitor script and dependencies
-- `frontend/` - Next.js app for managing Telegram bot token and chat ID
-
-## Features
-
-- Monitor BLS appointment availability automatically
-- Send Telegram notifications when slots open
-- Configure Telegram credentials via a web UI
-- Clean separation between monitoring logic and configuration UI
-
-## Getting started
-
-### 1. Backend
+## Run locally
 
 ```bash
-cd backend
-pip install -r requirements.txt
-```
-
-Create a `.env` file with:
-
-```text
-TELEGRAM_BOT_TOKEN=<your-bot-token>
-TELEGRAM_CHAT_ID=<your-chat-id>
-CHECK_INTERVAL=30
-```
-
-Run the monitor:
-
-```bash
-python monitor.py
-```
-
-### 2. Frontend
-
-```bash
-cd frontend
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` and enter your Telegram bot token and chat ID.
+Open `http://localhost:3000`.
 
-## Notes
+## Main flows
 
-- The frontend saves configuration for the backend monitor.
-- Make sure the Python backend can read the `.env` file after the frontend writes it.
-- Use a reasonable `CHECK_INTERVAL` so you do not overload the service.
+- Save Telegram bot token and Telegram ID from the dashboard
+- Start or stop the monitor from the dashboard
+- Run a manual check without leaving the page
+- Watch recent server-side activity in the activity log
 
-## Useful commands
+## Storage
 
-- Start backend monitor: `cd backend && python monitor.py`
-- Start frontend UI: `cd frontend && npm run dev`
+Monitor settings are stored in `data/monitor-config.json`. This file is ignored by git.
 
-## License
+## Server routes
 
-MIT
+- `GET /api/config`: read current saved config
+- `POST /api/config`: validate and save Telegram credentials
+- `GET /api/monitor`: read monitor state and recent logs
+- `POST /api/monitor`: start, stop, or manually trigger the monitor
+
+## Stress testing
+
+Use the local mock Telegram API so the stress test does not hit the real Telegram service.
+
+1. Start the mock Telegram server:
+
+```bash
+npm run mock:telegram
+```
+
+2. Start the Next.js app with the mock API base URL:
+
+```bash
+$env:TELEGRAM_API_BASE_URL="http://127.0.0.1:4010"
+npm run dev
+```
+
+3. Run the stress test in another terminal:
+
+```bash
+npm run stress:config
+```
+
+Optional environment variables:
+
+- `STRESS_TARGET_URL`: defaults to `http://127.0.0.1:3000/api/config`
+- `STRESS_REQUESTS`: defaults to `100`
+- `STRESS_CONCURRENCY`: defaults to `20`
+- `STRESS_BOT_TOKEN`: defaults to `stress-test-token`
+- `STRESS_TELEGRAM_ID`: defaults to `123456789`
+
+## Deployment note
+
+The monitor uses an in-process loop, so deploy it to a persistent Node.js runtime rather than a serverless-only environment.

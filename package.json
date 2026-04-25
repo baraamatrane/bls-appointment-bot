@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "stress:config": "node scripts/stress-config.mjs",
+    "mock:telegram": "node scripts/mock-telegram.mjs"
   },
   "dependencies": {
     "next": "^14.0.0",
